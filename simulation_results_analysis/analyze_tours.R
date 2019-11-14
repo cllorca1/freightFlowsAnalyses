@@ -67,4 +67,4 @@ ggplot(v_c_ratio_average, aes(x=vehicle_type, y = v_c_ratio, fill = vehicle_type
 
 ggplot(service_leg_ratio, aes(x=vehicle_type, y = rate, fill = vehicle_type)) +
   geom_bar(stat = "identity") + scale_fill_manual(values = colors) +
-  facet_grid(.~scenario)
+  facet_grid(.~scenario) + ylab("ratio service_time/travel_time")

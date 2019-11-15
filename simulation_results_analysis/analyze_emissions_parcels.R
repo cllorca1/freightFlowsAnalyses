@@ -5,6 +5,10 @@ folders = c("c:/models/freightFlows/output/muc_scenario_zero_c/",
             "c:/models/freightFlows/output/muc_scenario_1km/",
             "c:/models/freightFlows/output/muc_scenario_paketbox/")
 
+# 
+# folders = c("c:/models/freightFlows/output/testReg/",
+#             "c:/models/freightFlows/output/testReg_2/")
+
 scenarios = c("Base (urban)", "a (urban)", "b (urban)","c (urban)" )
 selected_DC = 20
 

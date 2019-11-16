@@ -14,15 +14,33 @@ scenario_folders = c("muc_scenario_zero_c",
             "muc_scenario_paketbox",
             "testRegNoCargoBikes",
             "testReg",
-            "testReg_2")
+            "testReg_2",
+            "muc_hd_100", 
+            "muc_hd_80",
+            "muc_hd_60",
+            "muc_hd_40",
+            "muc_hd_20",
+            "muc_hd_0")
 
-scenarios = c("muc-base", "muc-low-density", "muc-high_density_grid","muc-high_density_shops", "reg-base", "reg_low-density", "reg-high-density" )
-distribution_centers = c(20,20,20,20,10,10,10)
+scenarios = c("muc-base", 
+              "muc-low-density",
+              "muc-high_density_grid",
+              "muc-high_density_shops",
+              "reg-base", 
+              "reg_low-density",
+              "reg-high-density",
+              "muc_hd_100", 
+              "muc_hd_80",
+              "muc_hd_60",
+              "muc_hd_40",
+              "muc_hd_20",
+              "muc_hd_0")
+distribution_centers = c(20,20,20,20,10,10,10,20,20,20,20,20,20)
 
 scenario_table = data.frame(folders = scenario_folders, names = scenarios, dc = distribution_centers)
 
-colors_two = c("#407dd8","#36a332")
-colors_four = c("red", "pink", "#407dd8","#36a332" )
+colors_two = c("#407dd8","#255b89", "#36a332")
+colors_four = c("red", "pink", "#407dd8","#36a332")
 
 
 
@@ -97,10 +115,10 @@ server = function(input, output){
   
   output$tours = renderPlotly({
     summary = dataInput()
-    p = ggplot(summary, aes(y=n, x=scenario, fill = vehicle)) +
+    p = ggplot(summary, aes(y=n/weight_tn, x=scenario, fill = vehicle)) +
       scale_fill_manual(values = colors_two) + 
       geom_bar(stat = "identity", position = position_dodge2(preserve = "single")) +
-      ylab("Number of tours") +
+      ylab("Number of tours (normalized by weight in tn)") +
       xlab("Scenario (area)") +
       theme(text=element_text(size=14)) 
     ggplotly(p, height = 800)
@@ -112,10 +130,9 @@ server = function(input, output){
     
     p = ggplot(summary, aes(y=weight_tn, x=scenario, fill = vehicle)) +
       scale_fill_manual(values = colors_two) + 
-      geom_bar(stat = "identity", position = position_dodge2(preserve = "single")) +
-      ylab("Sum of parcel weight (tn)")  + 
+      geom_bar(stat = "identity", position = "fill") +
+      ylab("Parcel weight distribution")  + 
       xlab("Scenario (area)") +
-      ylim(0,80) + 
       theme(text=element_text(size=14))
     ggplotly(p, height = 800)
     
@@ -138,10 +155,10 @@ server = function(input, output){
   output$operating_time = renderPlotly({
     summary = dataInput()
     
-    p = ggplot(summary, aes(y=operatingTime/3600, x=scenario, fill = vehicle)) +
+    p = ggplot(summary, aes(y=operatingTime/60/weight_tn/1e3, x=scenario, fill = vehicle)) +
       scale_fill_manual(values = colors_two) + 
       geom_bar(stat = "identity", position = "stack") +
-      ylab("Sum of operating time (h)") + 
+      ylab("Operating time per weight unit (min/kg)") + 
       xlab("Scenario (area)")+
       theme(text=element_text(size=14))
     ggplotly(p, height = 800)

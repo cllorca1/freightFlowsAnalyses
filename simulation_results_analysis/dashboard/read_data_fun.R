@@ -97,7 +97,7 @@ read_model_results = function(upper_folder, scenario_names, scenario_folders, se
     summary_cargo_bike$commodity = "POST_PACKET"
     summary_cargo_bike$vehicle = "Cargo bike"
     
-    if (scenario == "muc-base" | scenario == "tesRegNoCargoBikes" | scenario == "muc_hd_0"){
+    if (scenario == "muc-base" | scenario == "reg-base" | scenario == "muc_hd_0"){
       summary_cargo_bike$weight_tn = 0
       summary_feeder$weight_tn = 0
     } else {

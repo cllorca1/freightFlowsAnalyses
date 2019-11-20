@@ -82,15 +82,15 @@ p = ggplot(summary %>% filter(vehicle != "Feeder"), aes(y=weight_tn, x=scenario,
   geom_bar(stat = "identity", position = "fill") +
   ylab("Parcel weight distribution")  + 
   xlab("Scenario") +
-  theme(text=element_text(size=14))
+  theme(text=element_text(size=14), axis.text.x = element_text(angle = 90))
 p
 
 p = ggplot(summary %>% filter(vehicle != "Feeder"), aes(y=parcels, x=scenario, fill = vehicle)) +
   scale_fill_manual(values = colors_two) + 
   geom_bar(stat = "identity", position = "Fill") +
-  ylab("Parcels")  + 
+  ylab("Distribution of nummer of parcels")  + 
   xlab("Scenario") +
-  theme(text=element_text(size=14))
+  theme(text=element_text(size=14), axis.text.x = element_text(angle = 90))
 p
 
 p = ggplot(summary, aes(y=distance/weight_tn/1e3, x=scenario, fill = vehicle)) +

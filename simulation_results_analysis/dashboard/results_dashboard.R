@@ -36,6 +36,20 @@ scenarios = c("muc-base",
               "muc_hd_60",
               "muc_hd_80",
               "muc_hd_100")
+
+scenario_pretty_names = c("Munich (base case)", 
+              "Munich (low micro depot density)",
+              "Munich (high micro depot density - 1kmx1km)",
+              "Munich (high micro depot density - at shops)",
+              "reg-base", 
+              "reg_low-density",
+              "reg-high-density",
+              "Munich (base case) 0%",
+              "muc_hd_20",
+              "muc_hd_40",
+              "muc_hd_60",
+              "muc_hd_80",
+              "muc_hd_100")
 distribution_centers = c(20,20,20,20,10,10,10,20,20,20,20,20,20)
 
 scenario_table = data.frame(folders = scenario_folders, names = scenarios, dc = distribution_centers)
@@ -51,8 +65,8 @@ ui = dashboardPage(
   dashboardHeader(title = "RadLast"),
   dashboardSidebar(
     checkboxGroupInput(inputId = "selected_scenarios" , 
-                       label = "Scenarios",
-                       choices = scenarios, selected = scenarios[1], width = 325),
+                       label = "Scenarios", choiceNames= scenario_pretty_names,
+                       choiceValues = scenarios, selected = scenarios[1], width = 325),
     checkboxGroupInput(inputId = "location" , 
                        label = "Map",
                        choices = c("MUC", "REG"), selected = "MUC", width = 325),
@@ -142,7 +156,7 @@ server = function(input, output){
       scale_fill_manual(values = colors_two
                        ) + 
       geom_bar(stat = "identity", position = "fill") +
-      ylab("Parcel weight distribution")  + 
+      ylab("Distribution by parcel weight")  + 
       xlab("Scenario ") +
       theme(text=element_text(size=14))
     ggplotly(p, height = 800)
@@ -156,7 +170,7 @@ server = function(input, output){
       scale_fill_manual(values = colors_two
       ) + 
       geom_bar(stat = "identity", position = "fill") +
-      ylab("Parcel weight distribution")  + 
+      ylab("Distribution by number of parcels")  + 
       xlab("Scenario ") +
       theme(text=element_text(size=14))
     ggplotly(p, height = 800)

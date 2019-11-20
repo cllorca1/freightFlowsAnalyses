@@ -37,7 +37,6 @@ read_model_results = function(upper_folder, scenario_names, scenario_folders, se
     
     #trucks_with_emissions = left_join(ld_trucks_assigned, vehicle_emissions, by = "id")
     
-    
     total_weight = parcels %>%
       filter(assigned, toDestination) %>%
       summarize(weight_kg = sum(weight_kg), n = n())
@@ -51,7 +50,6 @@ read_model_results = function(upper_folder, scenario_names, scenario_folders, se
     delivered_weight_cargo_bike = parcels %>%
       filter(assigned, toDestination, transaction != "PARCEL_SHOP") %>% group_by(distributionType) %>%
       summarize(weight_kg = sum(weight_kg), n = n())
-    
     
     #summary_ld_trucks = trucks_with_emissions %>%
       # filter(commodity != "NA") %>%
@@ -95,12 +93,10 @@ read_model_results = function(upper_folder, scenario_names, scenario_folders, se
     summary_cargo_bike$commodity = "POST_PACKET"
     summary_cargo_bike$vehicle = "Cargo bike"
     
-    if (scenario == "muc-base" | scenario == "reg-base" |
-        scenario == "muc_hd_0"| scenario == "muc_hd_0_v2"){
+    if (scenario == "muc-base" | scenario == "muc_hd_0"  | scenario == "reg-base"){
       summary_cargo_bike$weight_tn = 0
       summary_feeder$weight_tn = 0
       summary_vans$weight_tn = delivered_weight$weight_kg[1] / 1000
-      
       summary_cargo_bike$parcels = 0
       summary_feeder$parcels = 0
       summary_vans$parcels = delivered_weight$n[1]
@@ -109,7 +105,6 @@ read_model_results = function(upper_folder, scenario_names, scenario_folders, se
       summary_cargo_bike$weight_tn = delivered_weight_cargo_bike$weight_kg[1] / 1000
       summary_feeder$weight_tn = delivered_weight_cargo_bike$weight_kg[1] / 1000
       summary_vans$weight_tn = delivered_weight$weight_kg[1] / 1000 - delivered_weight_cargo_bike$weight_kg[1]/1000
-      
       summary_cargo_bike$parcels = delivered_weight_cargo_bike$n[1]
       summary_feeder$parcels = delivered_weight_cargo_bike$n[1]
       summary_vans$parcels = delivered_weight$n[1] - delivered_weight_cargo_bike$n[1]

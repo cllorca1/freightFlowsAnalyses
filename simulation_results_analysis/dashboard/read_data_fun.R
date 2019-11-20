@@ -9,7 +9,6 @@ read_model_results = function(upper_folder, scenario_names, scenario_folders, se
   
   for (i in 1:numberOfScenarios){
     
-    
     scenario = selected_scenarios[[i]]
     scenario_index = match(x = scenario, table = scenario_names)
     
@@ -70,7 +69,6 @@ read_model_results = function(upper_folder, scenario_names, scenario_folders, se
                                operatingTime =  sum(operatingTime)/scaleFactorParcels)
     
     summary_vans$commodity = "POST_PACKET"
-    summary_vans$weight_tn = delivered_weight$weight_kg[1] / 1000
     summary_vans$vehicle = "Van"
     
     
@@ -97,12 +95,25 @@ read_model_results = function(upper_folder, scenario_names, scenario_folders, se
     summary_cargo_bike$commodity = "POST_PACKET"
     summary_cargo_bike$vehicle = "Cargo bike"
     
-    if (scenario == "muc-base" | scenario == "reg-base" | scenario == "muc_hd_0"){
+    if (scenario == "muc-base" | scenario == "reg-base" |
+        scenario == "muc_hd_0"| scenario == "muc_hd_0_v2"){
       summary_cargo_bike$weight_tn = 0
       summary_feeder$weight_tn = 0
+      summary_vans$weight_tn = delivered_weight$weight_kg[1] / 1000
+      
+      summary_cargo_bike$parcels = 0
+      summary_feeder$parcels = 0
+      summary_vans$parcels = delivered_weight$n[1]
+
     } else {
       summary_cargo_bike$weight_tn = delivered_weight_cargo_bike$weight_kg[1] / 1000
       summary_feeder$weight_tn = delivered_weight_cargo_bike$weight_kg[1] / 1000
+      summary_vans$weight_tn = delivered_weight$weight_kg[1] / 1000 - delivered_weight_cargo_bike$weight_kg[1]/1000
+      
+      summary_cargo_bike$parcels = delivered_weight_cargo_bike$n[1]
+      summary_feeder$parcels = delivered_weight_cargo_bike$n[1]
+      summary_vans$parcels = delivered_weight$n[1] - delivered_weight_cargo_bike$n[1]
+     
     }
     
     
@@ -125,7 +136,7 @@ read_model_results = function(upper_folder, scenario_names, scenario_folders, se
   
   summary = summary %>% filter(commodity == "POST_PACKET")
   
-  summary$parcels = delivered_weight$n
+  #summary$parcels = delivered_weight$n
   
   factor_levels = c(scenario_names)
   

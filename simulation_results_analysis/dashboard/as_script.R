@@ -77,6 +77,14 @@ p = ggplot(summary, aes(y=n/weight_tn, x=scenario, fill = vehicle)) +
   theme(text=element_text(size=14)) 
 p 
 
+p = ggplot(summary, aes(y=n, x=scenario, fill = vehicle)) +
+  scale_fill_manual(values = colors_three) + 
+  geom_bar(stat = "identity", position = position_dodge2(preserve = "single")) +
+  ylab("Number of tours") +
+  xlab("Scenario") +
+  theme(text=element_text(size=14)) 
+p 
+
 p = ggplot(summary %>% filter(vehicle != "Feeder"), aes(y=weight_tn, x=scenario, fill = vehicle)) +
   scale_fill_manual(values = colors_two) + 
   geom_bar(stat = "identity", position = "fill") +
@@ -102,6 +110,16 @@ p = ggplot(summary, aes(y=distance/weight_tn/1e3, x=scenario, fill = vehicle)) +
 p
 
 
+p = ggplot(summary, aes(y=distance, x=scenario, fill = vehicle)) +
+  scale_fill_manual(values = colors_three) + 
+  geom_bar(stat = "identity", position =  "stack") +
+  ylab("Distance to deliver 1kg (m/kg)") + 
+  xlab("Scenario") +
+  theme(text=element_text(size=14))
+p
+
+
+
 p = ggplot(summary %>% filter(vehicle!="Cargo bike"), aes(y= NOx/weight_tn/1000, x=scenario, fill = vehicle)) +
   scale_fill_manual(values = colors_three) + 
   geom_bar(stat = "identity", position = "stack") +
@@ -109,3 +127,13 @@ p = ggplot(summary %>% filter(vehicle!="Cargo bike"), aes(y= NOx/weight_tn/1000,
   xlab("Scenario") +
   theme(text=element_text(size=14))
 p
+
+
+p = ggplot(summary %>% filter(vehicle!="Cargo bike"), aes(y= NOx, x=scenario, fill = vehicle)) +
+  scale_fill_manual(values = colors_three) + 
+  geom_bar(stat = "identity", position = "stack") +
+  ylab("NOx emissions (kg)") + 
+  xlab("Scenario") +
+  theme(text=element_text(size=14))
+p
+

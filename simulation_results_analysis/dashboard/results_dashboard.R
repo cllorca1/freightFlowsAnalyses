@@ -1,4 +1,5 @@
-pacman::p_load(data.table, dplyr, ggplot2, readr, tidyr, reshape, shiny, shinydashboard, plotly, processx, leaflet, sf, tmap, rgdal)
+pacman::p_load(data.table, dplyr, ggplot2, readr, tidyr, reshape, shiny, 
+               shinydashboard, plotly, processx, leaflet, sf, tmap, rgdal, shinyWidgets)
 
 this_folder = "C:/code/freightFlowsR/simulation_results_analysis/dashboard/"
 
@@ -9,48 +10,49 @@ source(paste(this_folder, "read_data_parcels.R", sep =""))
 
 upper_folder = "c:/models/freightFlows/"
 
-scenario_folders = c("muc_scenario_zero_c",
-                     "muc_scenario_3km",
-                     "muc_scenario_1km",
-                     "muc_scenario_paketbox",
-                     "testRegNoCargoBikes",
-                     "testReg",
-                     "testReg_2",
-                     "muc_hd_0",
+scenario_folders = c("muc_hd_0",
                      "muc_hd_20",
                      "muc_hd_40",
                      "muc_hd_60",
                      "muc_hd_80",
-                     "muc_hd_100")
+                     "muc_hd_100",
+                     "muc_densities_1000",
+                     "muc_densities_2000",
+                     "muc_densities_3000",
+                     "muc_demand_1",
+                     "muc_demand_1.5",
+                     "muc_demand_2",
+                     "muc_demand_2.5")
 
-scenarios = c("muc-base", 
-              "muc-low-density",
-              "muc-high_density_grid",
-              "muc-high_density_shops",
-              "reg-base", 
-              "reg_low-density",
-              "reg-high-density",
-              "muc_hd_0",
+scenarios = c("muc_hd_0",
               "muc_hd_20",
               "muc_hd_40",
               "muc_hd_60",
               "muc_hd_80",
-              "muc_hd_100")
+              "muc_hd_100",
+              "muc_densities_1000",
+              "muc_densities_2000",
+              "muc_densities_3000",
+              "muc_demand_1",
+              "muc_demand_1.5",
+              "muc_demand_2",
+              "muc_demand_2.5")
 
-scenario_pretty_names = c("Munich (base case)", 
-              "Munich (low micro depot density)",
-              "Munich (high micro depot density - 1kmx1km)",
-              "Munich (high micro depot density - at shops)",
-              "reg-base", 
-              "reg_low-density",
-              "reg-high-density",
-              "Munich (base case) 0%",
-              "muc_hd_20",
-              "muc_hd_40",
-              "muc_hd_60",
-              "muc_hd_80",
-              "muc_hd_100")
-distribution_centers = c(20,20,20,20,10,10,10,20,20,20,20,20,20)
+scenario_pretty_names = c(
+              "Munich 0%",
+              "Munich 20% (high density)",
+              "Munich 40% (high density)",
+              "Munich 60% (high density)",
+              "Munich 80% (high density)",
+              "Munich 100% (high density)",
+              "muc_densities_1000",
+              "muc_densities_2000",
+              "muc_densities_3000",
+              "muc_demand_1",
+              "muc_demand_1.5",
+              "muc_demand_2",
+              "muc_demand_2.5")
+distribution_centers = c(20,20,20,20,20,20,20,20,20,20,20,20,20)
 
 scenario_table = data.frame(folders = scenario_folders, names = scenarios, dc = distribution_centers)
 
@@ -70,7 +72,9 @@ ui = dashboardPage(
     checkboxGroupInput(inputId = "location" , 
                        label = "Map",
                        choices = c("MUC", "REG"), selected = "MUC", width = 325),
-    actionButton("update", "Update")
+    actionButton("update", "Update"),
+    switchInput(inputId = "relative", label = "Divide by weight", width = 325)
+    
   ),
   dashboardBody(
     fluidRow(
@@ -82,8 +86,9 @@ ui = dashboardPage(
         ),
         tabPanel(
           title = "Weight & parcels",
-          column( plotlyOutput("weight", width = "100%"), width = 6),
-          column( plotlyOutput("parcels", width = "100%"), width = 6)
+          column( plotlyOutput("weight", width = "100%"), width = 4),
+          column( plotlyOutput("parcels", width = "100%"), width = 4),
+          column( plotlyOutput("weight_absolute", width = "100%"), width = 4)
         ),
         tabPanel(
           title = "Distance/Weight",
@@ -138,11 +143,19 @@ server = function(input, output){
   
   output$tours = renderPlotly({
     summary = dataInput()
-    p = ggplot(summary, aes(y=n/weight_tn, x=scenario, fill = vehicle)) +
-      scale_fill_manual(values = colors_three
-                       ) + 
-      geom_bar(stat = "identity", position = position_dodge2(preserve = "single")) +
-      ylab("Number of tours (normalized by weight in tn)") +
+    
+    if (input$relative){
+      p = ggplot(summary, aes(y=n/weight_tn, x=scenario, fill = vehicle)) +
+        scale_fill_manual(values = colors_three) + 
+        ylab("Number of tours (normalized by weight in tn)")
+    } else {
+      p = ggplot(summary, aes(y=n, x=scenario, fill = vehicle)) +
+        scale_fill_manual(values = colors_three) + 
+        ylab("Number of tours")
+    }
+
+                       
+      p  = p + geom_bar(stat = "identity", position = position_dodge2(preserve = "single")) +
       xlab("Scenario ") +
       theme(text=element_text(size=14)) 
     ggplotly(p, height = 800)
@@ -156,6 +169,20 @@ server = function(input, output){
       scale_fill_manual(values = colors_two
                        ) + 
       geom_bar(stat = "identity", position = "fill") +
+      ylab("Distribution by parcel weight")  + 
+      xlab("Scenario ") +
+      theme(text=element_text(size=14))
+    ggplotly(p, height = 800)
+    
+  })
+  
+  output$weight_absolute = renderPlotly({
+    summary = dataInput()
+    
+    p = ggplot(summary %>% filter(vehicle != "Feeder"), aes(y=weight_tn, x=scenario, fill = vehicle)) +
+      scale_fill_manual(values = colors_two
+      ) + 
+      geom_bar(stat = "identity", position = "stack") +
       ylab("Distribution by parcel weight")  + 
       xlab("Scenario ") +
       theme(text=element_text(size=14))
@@ -181,11 +208,19 @@ server = function(input, output){
   output$distance_per_kg = renderPlotly({
     summary = dataInput()
     
-    p = ggplot(summary, aes(y=distance/weight_tn/1e3, x=scenario, fill = vehicle)) +
-      scale_fill_manual(values = colors_three
-                       ) + 
-      geom_bar(stat = "identity", position =  "stack") +
-      ylab("Distance to deliver 1kg (m/kg)") + 
+    
+    if (input$relative){
+      p = ggplot(summary, aes(y=distance/weight_tn/1e3, x=scenario, fill = vehicle)) +
+        scale_fill_manual(values = colors_three) +
+        ylab("Distance to deliver 1kg (m/kg)") 
+    } else {
+      p = ggplot(summary, aes(y=distance/1e3, x=scenario, fill = vehicle)) +
+        scale_fill_manual(values = colors_three) +
+        ylab("Distance travelled (km) ") 
+    }
+    
+    
+    p = p + geom_bar(stat = "identity", position =  "stack") +
       xlab("Scenario ") +
       theme(text=element_text(size=14))
     ggplotly(p, height = 800)
@@ -195,11 +230,18 @@ server = function(input, output){
   output$operating_time = renderPlotly({
     summary = dataInput()
     
-    p = ggplot(summary, aes(y=operatingTime/60/weight_tn/1e3, x=scenario, fill = vehicle)) +
-      scale_fill_manual(values = colors_three
-                       ) + 
-      geom_bar(stat = "identity", position = "stack") +
-      ylab("Operating time per weight unit (min/kg)") + 
+    if (input$relative){
+      p = ggplot(summary, aes(y=operatingTime/60/weight_tn/1e3, x=scenario, fill = vehicle)) +
+        scale_fill_manual(values = colors_three) + 
+        ylab("Operating time per weight unit (min/kg)")
+    } else {
+      p = ggplot(summary, aes(y=operatingTime/60, x=scenario, fill = vehicle)) +
+        scale_fill_manual(values = colors_three) + 
+        ylab("Operating time (min)")
+    }
+    
+    
+    p = p + geom_bar(stat = "identity", position = "stack") +
       xlab("Scenario ")+
       theme(text=element_text(size=14))
     ggplotly(p, height = 800)
@@ -210,8 +252,7 @@ server = function(input, output){
     summary = dataInput()
     
     p = ggplot(summary, aes(y= distance/n/1000, x=scenario, fill = vehicle)) +
-      scale_fill_manual(values = colors_three
-                       ) + 
+      scale_fill_manual(values = colors_three) + 
       geom_bar(stat = "identity", position = position_dodge2(preserve = "single")) +
       ylab("Avg. distance by vehicle (km)") +
       xlab("Scenario ")+
@@ -223,11 +264,18 @@ server = function(input, output){
   output$co2 = renderPlotly({
     summary = dataInput()
     
-    p = ggplot(summary %>% filter(vehicle!="Cargo bike"), aes(y= CO2/weight_tn/1000, x=scenario, fill = vehicle)) +
-      scale_fill_manual(values = colors_three
-                       ) + 
-      geom_bar(stat = "identity", position = "stack") +
-      ylab("CO2 emission by weight (kg/kg)") + 
+    
+    if (input$relative){
+      p = ggplot(summary %>% filter(vehicle!="Cargo bike"), aes(y= CO2/weight_tn/1000, x=scenario, fill = vehicle)) +
+        scale_fill_manual(values = colors_three) + 
+        ylab("CO2 emission by weight (kg/kg)")
+    } else {
+      p = ggplot(summary %>% filter(vehicle!="Cargo bike"), aes(y= CO2, x=scenario, fill = vehicle)) +
+        scale_fill_manual(values = colors_three) + 
+        ylab("CO2 emission (kg)")
+    }
+    
+    p = p + geom_bar(stat = "identity", position = "stack") +
       xlab("Scenario ") +
       theme(text=element_text(size=14))
     ggplotly(p, height = 800)
@@ -237,11 +285,17 @@ server = function(input, output){
   output$nox = renderPlotly({
     summary = dataInput()
     
-    p = ggplot(summary %>% filter(vehicle!="Cargo bike"), aes(y= NOx/weight_tn/1000, x=scenario, fill = vehicle)) +
-      scale_fill_manual(values = colors_three
-                       ) + 
+    if (input$relative){
+      p = ggplot(summary %>% filter(vehicle!="Cargo bike"), aes(y= NOx/weight_tn/1000, x=scenario, fill = vehicle)) +
+        ylab("NOx emission by weight (kg/kg)") 
+    } else {
+      p = ggplot(summary %>% filter(vehicle!="Cargo bike"), aes(y= NOx, x=scenario, fill = vehicle)) +
+        ylab("NOx emission by weight (kg)") 
+    }
+  
+      
+      p = p + scale_fill_manual(values = colors_three) + 
       geom_bar(stat = "identity", position = "stack") +
-      ylab("NOx emission by weight (kg/kg)") + 
       xlab("Scenario ") +
       theme(text=element_text(size=14))
     ggplotly(p, height = 800)

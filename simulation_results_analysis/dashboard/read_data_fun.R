@@ -93,7 +93,7 @@ read_model_results = function(upper_folder, scenario_names, scenario_folders, se
     summary_cargo_bike$commodity = "POST_PACKET"
     summary_cargo_bike$vehicle = "Cargo bike"
     
-    if (scenario == "muc-base" | scenario == "muc_hd_0"  | scenario == "reg-base"){
+    if (nrow(delivered_weight_cargo_bike %>% filter(distributionType == "CARGO_BIKE")) == 0){
       summary_cargo_bike$weight_tn = 0
       summary_feeder$weight_tn = 0
       summary_vans$weight_tn = delivered_weight$weight_kg[1] / 1000

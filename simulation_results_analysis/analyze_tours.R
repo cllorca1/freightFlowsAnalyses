@@ -1,5 +1,7 @@
 pacman::p_load(data.table, dplyr, tidyr, sf, ggplot2, readr, extrafont)
 
+# different shares ----
+
 folders = c("c:/models/freightFlows/output/muc_hd_0/",
             "c:/models/freightFlows/output/muc_hd_20/",
             "c:/models/freightFlows/output/muc_hd_40/",
@@ -11,11 +13,12 @@ scenarios = c(0,20,40,60,80,100)
 
 
 
-folders = c("c:/models/freightFlows/output/muc_densities_1000/",
-            "c:/models/freightFlows/output/muc_densities_2000/",
-            "c:/models/freightFlows/output/muc_densities_3000/")
 
-scenarios = c(1000,2000,3000)
+folders = c("c:/models/freightFlows/output/muc_demand_1.5/",
+            "c:/models/freightFlows/output/muc_demand_2/",
+            "c:/models/freightFlows/output/muc_demand_2.5/")
+
+scenarios = c(150,200,250)
 
 
 
@@ -65,30 +68,302 @@ colors = c("#36a332","#407dd8", "#193256")
 
 tours_all  =tours_all %>% left_join(capacities, by = "vehicle_type")
 
-
+tours_all$vehicle_type = factor(tours_all$vehicle_type, levels=c("truck", "cargoBike", "truck_feeder"), labels = c("Van", "Cargo bike", "truck_feeder"))
 #empty time
 empty_time = tours_all %>%
-  filter(type == "leg") %>%
+  filter(type == "leg", vehicle_type != "truck_feeder") %>%
   mutate(v_c = if_else(parcels/capacity < 0.2, "under20",if_else(parcels/capacity < 0.8, "between20and80", "over80"))) %>%
   group_by(scenario, vehicle_type, v_c) %>%
   summarize(time = sum(time), distance = sum(distance))
-empty_time$v_c = factor(empty_time$v_c, levels = c("over80", "between20and80","under20" ))
+ 
 
+empty_time$v_c = factor(empty_time$v_c, levels = c("over80", "between20and80","under20" ), labels = c("rate > 80%", "20 < rate <80%", "rate < 20%"))
 
-ggplot(empty_time, aes(y=time, x = scenario, fill = v_c)) +
+colors_two = c("#407dd8", "#36a332")
+
+ggplot(empty_time, aes(y=distance, x = scenario, fill = vehicle_type, alpha = as.factor(v_c))) +
+  scale_alpha_manual(values = c(1,0.7,0.5)) + 
+  scale_fill_manual(values = colors_two) + 
   geom_bar(stat = "identity", position = "fill") +
-  facet_wrap(.~vehicle_type)
+  facet_wrap(.~vehicle_type) +
+  theme_bw() + 
+  labs(fill = "Vehicle")+ 
+  xlab("Share of cargo bikes (%)") + 
+  ylab("Share of distance") +
+  labs(alpha = "Occupation rate (%)") + 
+  theme(legend.position = "none")
 
+folder = "C:/projects/Papers/2020_ISTS_Delft/figs/"
+fileName = paste(folder, "Sc.bmp", sep  ="")
 
-ggplot(empty_time, aes(y=distance, x = scenario, fill = v_c)) +
-  geom_bar(stat = "identity", position = "fill") +
-  facet_wrap(.~vehicle_type)
+ggsave(fileName,  width = 8, height = 10, units = "cm", dpi = 300)
 
 
 leg_vs_service = tours_all %>% group_by(type, vehicle_type, scenario) %>%
+  filter(vehicle_type != "truck_feeder") %>%
   summarize(time = sum(time), distance = sum(distance))
 
-ggplot(leg_vs_service, aes(y=time, x = scenario, fill = type)) +
+ggplot(leg_vs_service, aes(y=time, x = scenario, fill = vehicle_type, alpha = type)) +
+  scale_alpha_manual(values = c(1,0.7)) + 
+  scale_fill_manual(values = colors_two) + 
   geom_bar(stat = "identity", position = "fill") +
-  facet_wrap(.~vehicle_type)
+  facet_wrap(.~vehicle_type) + 
+  theme_bw() + 
+  labs(fill = "Vehicle")+ 
+  labs(alpha = "Action (%)") + 
+  xlab("Share of cargo bikes (%)") + 
+  ylab("Share of time") +
+  theme(legend.position = "none")
+
+folder = "C:/projects/Papers/2020_ISTS_Delft/figs/"
+fileName = paste(folder, "Se.bmp", sep  ="")
+
+ggsave(fileName,  width = 8, height = 10, units = "cm", dpi = 300)
+
+# different mds -----
+
+folders = c("c:/models/freightFlows/output/muc_densities_1000/",
+            "c:/models/freightFlows/output/muc_densities_2000/",
+            "c:/models/freightFlows/output/muc_densities_3000/")
+
+scenarios = c(1000,2000,3000)
+
+
+capacities = data.frame(vehicle_type = c("truck", "cargoBike", "truck_feeder"), capacity = c(200,20,200))
+
+tours_all = data.frame()
+
+
+for (i in 1:length(folders)){
+  folder = folders[[i]]
+  scenario = scenarios[[i]]
+  tour_analysis = read.csv(paste(folder, "carriers_analysis.csv", sep =""))
+  tour_analysis$vehicle_type = as.character(tour_analysis$vehicle_type)
+  tour_analysis$carrier = as.character(tour_analysis$carrier)
+  tour_analysis$scenario = scenario
+  tours_all= tours_all %>% bind_rows(tour_analysis)
+}
+
+colors = c("#36a332","#407dd8", "#193256")
+
+tours_all  =tours_all %>% left_join(capacities, by = "vehicle_type")
+
+tours_all$vehicle_type = factor(tours_all$vehicle_type, levels=c("truck", "cargoBike", "truck_feeder"), labels = c("Van", "Cargo bike", "truck_feeder"))
+#empty time
+empty_time = tours_all %>%
+  filter(type == "leg", vehicle_type != "truck_feeder") %>%
+  mutate(v_c = if_else(parcels/capacity < 0.2, "under20",if_else(parcels/capacity < 0.8, "between20and80", "over80"))) %>%
+  group_by(scenario, vehicle_type, v_c) %>%
+  summarize(time = sum(time), distance = sum(distance))
+
+
+empty_time$v_c = factor(empty_time$v_c, levels = c("over80", "between20and80","under20" ), labels = c("rate > 80%", "20 < rate <80%", "rate < 20%"))
+
+colors_two = c("#407dd8", "#36a332")
+
+ggplot(empty_time, aes(y=distance, x = scenario, fill = vehicle_type, alpha = as.factor(v_c))) +
+  scale_alpha_manual(values = c(1,0.7,0.5)) + 
+  scale_fill_manual(values = colors_two) + 
+  geom_bar(stat = "identity", position = "fill") +
+  facet_wrap(.~vehicle_type) +
+  theme_bw() + 
+  labs(fill = "Vehicle")+ 
+  xlab("Micro depot grid spacing (m)") +
+  ylab("Share of distance") +
+  labs(alpha = "Occupation rate (%)") + 
+  theme(legend.position = "none")
+
+folder = "C:/projects/Papers/2020_ISTS_Delft/figs/"
+fileName = paste(folder, "Me.bmp", sep  ="")
+
+ggsave(fileName,  width = 8, height = 10, units = "cm", dpi = 300)
+
+
+leg_vs_service = tours_all %>% group_by(type, vehicle_type, scenario) %>%
+  filter(vehicle_type != "truck_feeder") %>%
+  summarize(time = sum(time), distance = sum(distance))
+
+ggplot(leg_vs_service, aes(y=time, x = scenario, fill = vehicle_type, alpha = type)) +
+  scale_alpha_manual(values = c(1,0.7)) + 
+  scale_fill_manual(values = colors_two) + 
+  geom_bar(stat = "identity", position = "fill") +
+  facet_wrap(.~vehicle_type) + 
+  theme_bw() + 
+  labs(fill = "Vehicle")+ 
+  labs(alpha = "Action (%)") + 
+  xlab("Micro depot grid spacing (m)") +
+  ylab("Share of time") +
+  theme(legend.position = "none")
+
+folder = "C:/projects/Papers/2020_ISTS_Delft/figs/"
+fileName = paste(folder, "Mf.bmp", sep  ="")
+
+ggsave(fileName,  width = 8, height = 10, units = "cm", dpi = 300)
+
+
+# different demands -----
+
+folders = c("c:/models/freightFlows/output/muc_demand_1/",
+            "c:/models/freightFlows/output/muc_demand_1.5/",
+            "c:/models/freightFlows/output/muc_demand_2/",
+            "c:/models/freightFlows/output/muc_demand_2.5/")
+
+scenarios = c("100%","150%","200%","250%")
+
+
+capacities = data.frame(vehicle_type = c("truck", "cargoBike", "truck_feeder"), capacity = c(200,20,200))
+
+tours_all = data.frame()
+
+
+for (i in 1:length(folders)){
+  folder = folders[[i]]
+  scenario = scenarios[[i]]
+  tour_analysis = read.csv(paste(folder, "carriers_analysis.csv", sep =""))
+  tour_analysis$vehicle_type = as.character(tour_analysis$vehicle_type)
+  tour_analysis$carrier = as.character(tour_analysis$carrier)
+  tour_analysis$scenario = scenario
+  tours_all= tours_all %>% bind_rows(tour_analysis)
+}
+
+colors = c("#36a332","#407dd8", "#193256")
+
+tours_all  =tours_all %>% left_join(capacities, by = "vehicle_type")
+
+tours_all$vehicle_type = factor(tours_all$vehicle_type, levels=c("truck", "cargoBike", "truck_feeder"), labels = c("Van", "Cargo bike", "truck_feeder"))
+#empty time
+empty_time = tours_all %>%
+  filter(type == "leg", vehicle_type != "truck_feeder") %>%
+  mutate(v_c = if_else(parcels/capacity < 0.2, "under20",if_else(parcels/capacity < 0.8, "between20and80", "over80"))) %>%
+  group_by(scenario, vehicle_type, v_c) %>%
+  summarize(time = sum(time), distance = sum(distance))
+
+
+empty_time$v_c = factor(empty_time$v_c, levels = c("over80", "between20and80","under20" ), labels = c("rate > 80%", "20 < rate <80%", "rate < 20%"))
+
+colors_two = c("#407dd8", "#36a332")
+
+ggplot(empty_time, aes(y=distance, x = scenario, fill = vehicle_type, alpha = as.factor(v_c))) +
+  scale_alpha_manual(values = c(1,0.7,0.5)) + 
+  scale_fill_manual(values = colors_two) + 
+  geom_bar(stat = "identity", position = "fill") +
+  facet_wrap(.~vehicle_type) +
+  theme_bw() + 
+  labs(fill = "Vehicle")+ 
+  xlab("Micro depot grid spacing (m)") +
+  ylab("Share of distance") +
+  labs(alpha = "Occupation rate (%)") + 
+  theme(legend.position = "none")
+
+folder = "C:/projects/Papers/2020_ISTS_Delft/figs/"
+fileName = paste(folder, "De.bmp", sep  ="")
+
+ggsave(fileName,  width = 8, height = 10, units = "cm", dpi = 300)
+
+
+leg_vs_service = tours_all %>% group_by(type, vehicle_type, scenario) %>%
+  filter(vehicle_type != "truck_feeder") %>%
+  summarize(time = sum(time), distance = sum(distance))
+
+ggplot(leg_vs_service, aes(y=time, x = scenario, fill = vehicle_type, alpha = type)) +
+  scale_alpha_manual(values = c(1,0.7)) + 
+  scale_fill_manual(values = colors_two) + 
+  geom_bar(stat = "identity", position = "fill") +
+  facet_wrap(.~vehicle_type) + 
+  theme_bw() + 
+  labs(fill = "Vehicle")+ 
+  labs(alpha = "Action (%)") + 
+  xlab("Micro depot grid spacing (m)") +
+  ylab("Share of time") +
+  theme(legend.position = "none")
+
+folder = "C:/projects/Papers/2020_ISTS_Delft/figs/"
+fileName = paste(folder, "Df.bmp", sep  ="")
+
+ggsave(fileName,  width = 8, height = 10, units = "cm", dpi = 300)
+
+
+
+# different dcs -----
+
+folders = c("c:/models/freightFlows/output/muc_dc_20/",
+            "c:/models/freightFlows/output/muc_dc_19/",
+            "c:/models/freightFlows/output/muc_dc_16/",
+            "c:/models/freightFlows/output/muc_dc_24/",
+            "c:/models/freightFlows/output/muc_dc_22/")
+
+scenario_folders = c("muc_dc_20", "muc_dc_19", "muc_dc_16", "muc_dc_24", "muc_dc_22")
+
+
+capacities = data.frame(vehicle_type = c("truck", "cargoBike", "truck_feeder"), capacity = c(200,20,200))
+
+tours_all = data.frame()
+
+
+for (i in 1:length(folders)){
+  folder = folders[[i]]
+  scenario = scenarios[[i]]
+  tour_analysis = read.csv(paste(folder, "carriers_analysis.csv", sep =""))
+  tour_analysis$vehicle_type = as.character(tour_analysis$vehicle_type)
+  tour_analysis$carrier = as.character(tour_analysis$carrier)
+  tour_analysis$scenario = scenario
+  tours_all= tours_all %>% bind_rows(tour_analysis)
+}
+
+colors = c("#36a332","#407dd8", "#193256")
+
+tours_all  =tours_all %>% left_join(capacities, by = "vehicle_type")
+
+tours_all$vehicle_type = factor(tours_all$vehicle_type, levels=c("truck", "cargoBike", "truck_feeder"), labels = c("Van", "Cargo bike", "truck_feeder"))
+#empty time
+empty_time = tours_all %>%
+  filter(type == "leg", vehicle_type != "truck_feeder") %>%
+  mutate(v_c = if_else(parcels/capacity < 0.2, "under20",if_else(parcels/capacity < 0.8, "between20and80", "over80"))) %>%
+  group_by(scenario, vehicle_type, v_c) %>%
+  summarize(time = sum(time), distance = sum(distance))
+
+
+empty_time$v_c = factor(empty_time$v_c, levels = c("over80", "between20and80","under20" ), labels = c("rate > 80%", "20 < rate <80%", "rate < 20%"))
+
+colors_two = c("#407dd8", "#36a332")
+
+ggplot(empty_time, aes(y=distance, x = scenario, fill = vehicle_type, alpha = as.factor(v_c))) +
+  scale_alpha_manual(values = c(1,0.7,0.5)) + 
+  scale_fill_manual(values = colors_two) + 
+  geom_bar(stat = "identity", position = "fill") +
+  facet_wrap(.~vehicle_type) +
+  theme_bw() + 
+  labs(fill = "Vehicle")+ 
+  xlab("Micro depot grid spacing (m)") +
+  ylab("Share of distance") +
+  labs(alpha = "Occupation rate (%)") + 
+  theme(legend.position = "none")
+
+folder = "C:/projects/Papers/2020_ISTS_Delft/figs/"
+fileName = paste(folder, "DCe.bmp", sep  ="")
+
+#ggsave(fileName,  width = 8, height = 10, units = "cm", dpi = 300)
+
+
+leg_vs_service = tours_all %>% group_by(type, vehicle_type, scenario) %>%
+  filter(vehicle_type != "truck_feeder") %>%
+  summarize(time = sum(time), distance = sum(distance))
+
+ggplot(leg_vs_service, aes(y=time, x = scenario, fill = vehicle_type, alpha = type)) +
+  scale_alpha_manual(values = c(1,0.7)) + 
+  scale_fill_manual(values = colors_two) + 
+  geom_bar(stat = "identity", position = "fill") +
+  facet_wrap(.~vehicle_type) + 
+  theme_bw() + 
+  labs(fill = "Vehicle")+ 
+  labs(alpha = "Action (%)") + 
+  xlab("Micro depot grid spacing (m)") +
+  ylab("Share of time") +
+  theme(legend.position = "none")
+
+folder = "C:/projects/Papers/2020_ISTS_Delft/figs/"
+fileName = paste(folder, "Df.bmp", sep  ="")
+
+#ggsave(fileName,  width = 8, height = 10, units = "cm", dpi = 300)
+
 

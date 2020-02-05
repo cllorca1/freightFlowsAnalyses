@@ -73,13 +73,13 @@ fileName = paste(folder, "Sb.bmp", sep  ="")
 ggsave(fileName, width = 8, height = 10, units = "cm", dpi = 300)
 
 
-# p = ggplot(summary, aes(y=operatingTime, x=scenario, fill = vehicle)) +
-#   scale_fill_manual(values = colors_three) + 
-#   geom_bar(stat = "identity", position =  "stack") +
-#   ylab("Time travelling") + 
-#   xlab("Scenario") +
-#   theme(text=element_text(size=14))
-# p
+p = ggplot(summary, aes(y=operatingTime, x=scenario, fill = vehicle)) +
+  scale_fill_manual(values = colors_three) +
+  geom_bar(stat = "identity", position =  "stack") +
+  ylab("Time travelling") +
+  xlab("Scenario") +
+  theme(text=element_text(size=14))
+p
 
 
 ggplot(summary, aes(y=distance/parcels, x=scenario, fill = vehicle)) +

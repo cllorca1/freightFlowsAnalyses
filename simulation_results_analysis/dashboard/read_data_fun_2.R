@@ -1,4 +1,4 @@
-read_model_results = function(upper_folder, scenario_names, scenario_folders, selected_scenarios, distribution_centers){
+read_model_results_2 = function(upper_folder, scenario_names, scenario_folders, selected_scenarios, distribution_centers, share_of_ev){
   
   numberOfScenarios = length(selected_scenarios)
 
@@ -33,16 +33,27 @@ read_model_results = function(upper_folder, scenario_names, scenario_folders, se
     
     vehicle_emissions = vehicle_emissions %>% filter(distance != 0)
     
+    
+    vehicle_emissions = vehicle_emissions %>% rowwise() %>% 
+      mutate(CO = if_else(runif(1,0,1)< share_of_ev, 0, CO)) %>% 
+      mutate(CO2 = if_else(runif(1,0,1)< share_of_ev, 0, CO2)) %>% 
+      mutate(HC = if_else(runif(1,0,1)< share_of_ev, 0, HC)) %>% 
+      mutate(PM = if_else(runif(1,0,1)< share_of_ev, 0, PM)) %>% 
+      mutate(NOx = if_else(runif(1,0,1)< share_of_ev, 0, NOx))
+      
+    
+    
+    
     #ld_trucks_assigned = ld_trucks %>% filter(assigned == T)
     
     #trucks_with_emissions = left_join(ld_trucks_assigned, vehicle_emissions, by = "id")
     
     total_weight = parcels %>%
-      filter(assigned, toDestination) %>%
+      filter(assigned) %>%
       summarize(weight_kg = sum(weight_kg), n = n())
     
     delivered_weight_van = parcels %>%
-      filter(assigned, toDestination, transaction != "PARCEL_SHOP", distributionType == "MOTORIZED") %>%
+      filter(assigned, transaction != "PARCEL_SHOP", distributionType == "MOTORIZED") %>%
       summarize(weight_kg = sum(weight_kg), n = n())
     
     if(nrow(delivered_weight_van) == 0){
@@ -56,7 +67,7 @@ read_model_results = function(upper_folder, scenario_names, scenario_folders, se
     }
     
     delivered_weight_cargo_bike = parcels %>%
-      filter(assigned, toDestination, transaction != "PARCEL_SHOP", distributionType == "CARGO_BIKE") %>%
+      filter(assigned, transaction != "PARCEL_SHOP", distributionType == "CARGO_BIKE") %>%
       summarize(weight_kg = sum(weight_kg), n = n())
     
     if(nrow(delivered_weight_cargo_bike) == 0){
@@ -70,7 +81,7 @@ read_model_results = function(upper_folder, scenario_names, scenario_folders, se
     
     
     delivered_weight_to_shop = parcels %>%
-      filter(assigned, toDestination, transaction == "PARCEL_SHOP") %>% group_by(distributionType) %>%
+      filter(assigned, transaction == "PARCEL_SHOP") %>% group_by(distributionType) %>%
       summarize(weight_kg = sum(weight_kg), n = n())
     
     if(nrow(delivered_weight_to_shop) == 0){
@@ -98,7 +109,7 @@ read_model_results = function(upper_folder, scenario_names, scenario_folders, se
     
     summary_feeder = vehicle_emissions %>%
       rowwise() %>%
-      filter(grepl("feeder",id)) %>%
+      filter(grepl("feeder",id) & !grepl("to_shop",id)) %>%
       mutate(id = "all") %>% 
       group_by() %>% summarize(n = n()/scaleFactorParcels, distance = sum(distance)/scaleFactorParcels,
                                CO2 = sum(CO2)/scaleFactorParcels, NOx = sum(NOx)/scaleFactorParcels,
@@ -106,6 +117,18 @@ read_model_results = function(upper_folder, scenario_names, scenario_folders, se
     
     summary_feeder$commodity = "POST_PACKET"
     summary_feeder$vehicle = "Feeder"
+    
+    
+    summary_feeder_to_shop = vehicle_emissions %>%
+      rowwise() %>%
+      filter(grepl("Shop",id)) %>%
+      mutate(id = "all") %>% 
+      group_by() %>% summarize(n = n()/scaleFactorParcels, distance = sum(distance)/scaleFactorParcels,
+                               CO2 = sum(CO2)/scaleFactorParcels, NOx = sum(NOx)/scaleFactorParcels,
+                               operatingTime =  sum(operatingTime)/scaleFactorParcels)
+    
+    summary_feeder_to_shop$commodity = "POST_PACKET"
+    summary_feeder_to_shop$vehicle = "Feeder (shop)"
     
     #summary_ld_trucks$vehicle = "Truck"
     
@@ -122,10 +145,12 @@ read_model_results = function(upper_folder, scenario_names, scenario_folders, se
     
     
     summary_cargo_bike$weight_tn = w_cb
-    summary_feeder$weight_tn = w_cb + w_shop
+    summary_feeder$weight_tn = w_cb 
+    summary_feeder_to_shop$weight_tn = w_shop
     summary_vans$weight_tn = w_van
     summary_cargo_bike$parcels = p_cb
-    summary_feeder$parcels = p_cb + p_shop
+    summary_feeder$parcels = p_cb 
+    summary_feeder_to_shop$parcels = p_shop
     summary_vans$parcels = p_van
 
     
@@ -137,6 +162,8 @@ read_model_results = function(upper_folder, scenario_names, scenario_folders, se
     this_summary = rbind(summary_vans, summary_cargo_bike)
     
     this_summary = rbind(this_summary, summary_feeder)
+    
+    this_summary = rbind(this_summary, summary_feeder_to_shop)
     
     this_summary$scenario = scenario
     
@@ -155,7 +182,7 @@ read_model_results = function(upper_folder, scenario_names, scenario_folders, se
   factor_levels = c(scenario_names)
   
   summary$scenario = factor(summary$scenario, levels = factor_levels)
-  summary$vehicle = factor(summary$vehicle, levels = c("Van", "Feeder", "Cargo bike"))
+  summary$vehicle = factor(summary$vehicle, levels = c("Van", "Feeder", "Cargo bike", "Feeder (shop)"))
   
   return(summary)
   

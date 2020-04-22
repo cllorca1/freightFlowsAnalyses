@@ -9,7 +9,7 @@ read_model_counts = function(upper_folder, scenario_names, scenario_folders, sel
     scenario = selected_scenarios[[i]]
     scenario_index = match(x = scenario, table = scenario_names)
     
-    folder = paste(upper_folder, "output/", scenario_folders[[scenario_index]], "/", sep = "")
+    folder = paste(upper_folder, scenario_folders[[scenario_index]], "/", sep = "")
    
     this_counts = read.csv(paste(folder, "matsim/counts.csv", sep =""))
     this_counts$scenario = scenario

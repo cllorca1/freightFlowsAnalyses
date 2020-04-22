@@ -11,9 +11,6 @@ folders = c("c:/models/freightFlows/output/muc_hd_0/",
 
 scenarios = c(0,20,40,60,80,100)
 
-
-
-
 folders = c("c:/models/freightFlows/output/muc_demand_1.5/",
             "c:/models/freightFlows/output/muc_demand_2/",
             "c:/models/freightFlows/output/muc_demand_2.5/")

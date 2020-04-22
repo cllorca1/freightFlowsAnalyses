@@ -12,7 +12,7 @@ read_model_parcels = function(upper_folder, scenario_names, scenario_folders, se
   selected_DC = distribution_centers[[scenario_index]]
   
   
-  folder = paste(upper_folder, "output/", scenario_folders[[scenario_index]], "/", sep = "")
+  folder = paste(upper_folder, scenario_folders[[scenario_index]], "/", sep = "")
   parcels = read_csv(paste(folder, "parcels.csv", sep = ""))
   
   parcels = parcels %>% filter(distributionCenter == selected_DC,

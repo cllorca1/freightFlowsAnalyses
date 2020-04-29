@@ -8,14 +8,15 @@ source(paste(this_folder, "read_counts_fun.R", sep =""))
 #source(paste(this_folder, "read_networks.R", sep =""))
 source(paste(this_folder, "read_data_parcels.R", sep =""))
 
-upper_folder = "C:/models/freightFlows/output/"
+upper_folder = "D:/simulations/foca/paper_ists/"
 
-scenario_folders = c("0_cargo_bike_dc20",
-                     "20_cargo_bike_dc20",
-                     "40_cargo_bike_dc20",
-                     "60_cargo_bike_dc20",
-                     "80_cargo_bike_dc20",
-                     "100_cargo_bike_dc20")
+scenario_folders = c("muc_hd_0",
+                     "muc_hd_20",
+                     "muc_hd_40",
+                     "muc_hd_60",
+                     "muc_hd_80",
+                     "muc_hd_100")
+
 
 scenarios = c("muc_hd_0",
               "muc_hd_20",

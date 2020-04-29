@@ -10,12 +10,12 @@ source(paste(this_folder, "read_networks.R", sep =""))
 upper_folder = "C:/models/freightFlows/output/"
 
 scenario_folders = c(
-  "0_cargo_bike_dc20",
-  "20_cargo_bike_dc20",
+  "0_cargo_bike_dc20_v3",
+  "20_cargo_bike_dc20_v3",
   "40_cargo_bike_dc20",
-  "60_cargo_bike_dc20",
-  "80_cargo_bike_dc20",
-  "100_cargo_bike_dc20"
+  "60_cargo_bike_dc20_v3",
+  "80_cargo_bike_dc20_v3",
+  "100_cargo_bike_dc20_v3"
 )
 
 scenarios = c(
@@ -42,7 +42,7 @@ distribution_centers = c(
   20,
   20,
   20,
-  20,
+  20
   )
 
 scenario_table = data.frame(folders = scenario_folders, names = scenarios, dc = distribution_centers)
@@ -78,21 +78,21 @@ colors_four = c("red", "pink", "#407dd8","#36a332")
 #   theme_bw() 
 
 ggplot(summary %>% filter(share_of_ev == 0, vehicle != "Feeder (shop)"), aes(y=n, x=scenario, linetype = vehicle, color = vehicle, group = vehicle)) +
-  scale_color_manual(values = c("black", "grey66", "grey66")) + 
-  scale_linetype_manual(values = c("solid", "dotted", "solid")) + 
+  scale_color_manual(values = c("grey25", "grey66", "grey80"), name = "Vehicle") + 
+  scale_linetype_manual(values = c("solid", "dotted", "solid"), name = "Vehicle") + 
   geom_point(size = 4) + 
   geom_line(stat = "identity", size = 1) +
   ylab("Number of tours") +
   xlab("Share of cargo bikes (%)") +
-  theme(text=element_text(size=14)) + 
+  scale_y_continuous(limits = c(0,400), expand = c(0, 0)) + 
   theme_bw() 
 
 ggplot(summary %>% filter(vehicle != "Feeder", vehicle != "Feeder (shop)", share_of_ev == 0), aes(y=parcels, x=scenario, fill = vehicle)) +
-  scale_fill_manual(values = c("gray25", "gray66")) +
+  scale_fill_manual(values = c("gray25", "gray80"), name = "Vehicle") +
   geom_bar(stat = "identity", position =  "fill", color  ="black") +
   ylab("Number ofparcels")  +
   xlab("Share of parcels by cargo bike (%)") +
-  theme(text=element_text(size=14), axis.text.x = element_text(angle = 90)) +
+  scale_y_continuous(expand = c(0,0)) +
   theme_bw()
 
 # ggplot(summary %>% filter(vehicle != "Feeder"), aes(y=parcels, x=scenario, fill = vehicle)) +
@@ -108,11 +108,11 @@ summary_aux = summary
 summary_aux$vehicle = factor(summary_aux$vehicle, levels = c("Cargo bike", "Feeder", "Van","Feeder (shop)" ))
 
 ggplot(summary_aux %>% filter(share_of_ev == 0, vehicle != "Feeder (shop)"), aes(y=distance/1000, x=scenario, fill = vehicle, group = vehicle)) +
-  scale_fill_manual(values = c("gray80", "gray66", "gray25")) + 
+  scale_fill_manual(values = c("gray80", "gray66", "gray25"), name = "Vehicle") + 
   geom_bar(stat = "identity", position =  "stack", color = "black") +
   ylab("Distance travelled (km)") + 
   xlab("Share of cargo bikes (%)") +
-  theme(text=element_text(size=14)) + 
+  scale_y_continuous(expand = c(0,0), limits = c(0,6000)) +
   theme_bw()
 
 # ggplot(summary %>% filter(share_of_ev == 0), aes(y=distance/1000, x=scenario, color = vehicle, group = vehicle)) +
@@ -148,15 +148,16 @@ ggplot(summary %>% filter(share_of_ev == 0,), aes(y=operatingTime/60/n, x=scenar
   theme(text=element_text(size=14)) +
   theme_bw()
 
+summary_aux$share_of_ev = factor(summary_aux$share_of_ev, levels = c(0, 0.25, 0.50), labels = c("0% EV", "25% EV", "50% EV"))
+
 
 ggplot(summary_aux %>% filter(vehicle !="Feeder (shop)"), aes(y= CO2, x=scenario, fill = vehicle, group = vehicle)) +
-  scale_fill_manual(values = c("gray80", "gray66", "gray25")) + 
+  scale_fill_manual(values = c("gray80", "gray66", "gray25"), name = "Vehicle") + 
   geom_bar(stat = "identity", position = "stack", color = "black") +
   ylab("CO2 emissions (g)") + 
   xlab("Share of cargo bikes (%)") +
-  theme(text=element_text(size=14)) +
   facet_wrap(.~share_of_ev) +
-  theme_bw()
+  theme_bw() + theme() +scale_y_continuous(limits = c(0,4e6),expand = c(0, 0))
 
 
 # ggplot(summary, aes(y= NOx, x=scenario, fill = vehicle, group = vehicle)) +

@@ -1,7 +1,7 @@
 pacman::p_load(data.table, dplyr, ggplot2, tidyr, readr, plotly, sf)
 
 folder = "C:/models/freightFlows/output/"
-scenario = "test_mode_choice_4"
+scenario = "mc_cargo_bike_dc20"
 
 
 mode_choice = read.csv(paste(folder, scenario, "/analyticalModeChoice.csv", sep = ""))
@@ -25,7 +25,16 @@ mode_choice_summary_2 = mode_choice_summary %>%
   mutate(parcels = parcels_bike + parcels_truck) %>% 
   mutate(modal_share_bike = parcels_bike / parcels)
 
+
+mode_choice_summary_2 %>% group_by(dc) %>% summarize(sum(parcels_bike)/sum(parcels))
+
+
+
+
+
 ggplot(mode_choice_summary_2, aes(x=parcels, y = modal_share_bike, color = as.factor(dc))) + geom_point() 
+
+
 
 
 

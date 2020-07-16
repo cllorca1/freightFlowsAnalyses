@@ -10,35 +10,27 @@ source(paste(this_folder, "read_networks.R", sep =""))
 upper_folder = "C:/models/freightFlows/output/"
 
 scenario_folders = c(
-  "0_cargo_bike_dc20_v3",
-  "20_cargo_bike_dc20_v3",
+  "0_cargo_bike_dc20",
   "40_cargo_bike_dc20",
-  "60_cargo_bike_dc20_v3",
-  "80_cargo_bike_dc20_v3",
-  "100_cargo_bike_dc20_v3"
+  "60_cargo_bike_dc20",
+  "100_cargo_bike_dc20"
 )
 
 scenarios = c(
   0,
-  20,
   40,
   60,
-  80,
   100
   )
 
 scenario_pretty_names = c(
   "Munich 0%",
-  "Munich 20% (high density)",
   "Munich 40% (high density)",
   "Munich 60% (high density)",
-  "Munich 80% (high density)",
   "Munich 100% (high density)"
 )
 
 distribution_centers = c(
-  20,
-  20,
   20,
   20,
   20,
@@ -51,7 +43,7 @@ input = list()
 
 input$selected_scenarios = scenarios
 
-shares_of_ev = c(0, 0.25, 0.5)
+shares_of_ev = c(0)
 
 summary = data.frame()
 
@@ -77,9 +69,8 @@ colors_four = c("red", "pink", "#407dd8","#36a332")
 #   theme(text=element_text(size=14)) + 
 #   theme_bw() 
 
-ggplot(summary %>% filter(share_of_ev == 0, vehicle != "Feeder (shop)"), aes(y=n, x=scenario, linetype = vehicle, color = vehicle, group = vehicle)) +
-  scale_color_manual(values = c("#6b719f", "#70928c", "#a5c594"), name = "Vehicle") + 
-  scale_linetype_manual(values = c("solid", "dotted", "solid"), name = "Vehicle") + 
+ggplot(summary %>% filter(share_of_ev == 0), aes(y=n, x=scenario, linetype = vehicle, color = vehicle, group = vehicle)) +
+  scale_color_manual(values = colors_4_vehicles, name = "Vehicle") + 
   geom_point(size = 3) + 
   geom_line(stat = "identity", size = 1) +
   ylab("Number of tours") +
@@ -93,20 +84,20 @@ ggplot(summary %>% filter(share_of_ev == 0, vehicle != "Feeder (shop)"), aes(y=n
 
 
 
-ggsave("simulation_results_analysis/tours.pdf", device = "pdf", scale = 0.75, width = 150, height = 150, units = "mm")
-ggsave("simulation_results_analysis/tours.bmp", device = "bmp", scale = 0.75, width = 150, height = 150, units = "mm")
+#ggsave("simulation_results_analysis/tours.pdf", device = "pdf", scale = 0.75, width = 150, height = 150, units = "mm")
+#ggsave("simulation_results_analysis/tours.bmp", device = "bmp", scale = 0.75, width = 150, height = 150, units = "mm")
 
 ggplot(summary %>% filter(vehicle != "Feeder", vehicle != "Feeder (shop)", share_of_ev == 0), aes(y=parcels, x=scenario, fill = vehicle)) +
   scale_fill_manual(values = c("#6b719f", "#a5c594"), name = "Vehicle") +
-  geom_bar(stat = "identity", position =  "fill", color  ="black") +
+  geom_bar(stat = "identity", position =  "stack", color  ="black") +
   ylab("Number ofparcels")  +
   xlab("Share of parcels by cargo bike (%)") +
   scale_y_continuous(expand = c(0,0)) +
   theme_bw() + 
   theme(legend.position = "bottom", plot.margin=unit(c(0.5,0.5,0,0),"cm"))
 
-ggsave("simulation_results_analysis/share.pdf", device = "pdf", scale = 0.75, width = 150, height = 150, units = "mm")
-ggsave("simulation_results_analysis/share.bmp", device = "bmp", scale = 0.75, width = 150, height = 150, units = "mm")
+#ggsave("simulation_results_analysis/share.pdf", device = "pdf", scale = 0.75, width = 150, height = 150, units = "mm")
+#ggsave("simulation_results_analysis/share.bmp", device = "bmp", scale = 0.75, width = 150, height = 150, units = "mm")
 
 # ggplot(summary %>% filter(vehicle != "Feeder"), aes(y=parcels, x=scenario, fill = vehicle)) +
 #   scale_fill_manual(values = colors_two) +
@@ -121,16 +112,16 @@ summary_aux = summary
 summary_aux$vehicle = factor(summary_aux$vehicle, levels = c("Cargo bike", "Feeder", "Van","Feeder (shop)" ))
 
 ggplot(summary_aux %>% filter(share_of_ev == 0, vehicle != "Feeder (shop)"), aes(y=distance/1000, x=scenario, fill = vehicle, group = vehicle)) +
-  scale_fill_manual(values = c("#a5c594", "#70928c", "#6b719f"), name = "Vehicle") + 
+  scale_fill_manual(values = colors_4_vehicles, name = "Vehicle") + 
   geom_bar(stat = "identity", position =  "stack", color = "black") +
   ylab("Distance travelled (km)") + 
   xlab("Share of cargo bikes (%)") +
-  scale_y_continuous(expand = c(0,0), limits = c(0,6000)) +
+  #scale_y_continuous(expand = c(0,0), limits = c(0,6000)) +
   theme_bw() + 
   theme(legend.position = "bottom", plot.margin=unit(c(0.5,0.5,0,0),"cm"))
 
-ggsave("simulation_results_analysis/vkt.pdf", device = "pdf", scale = 0.75, width = 150, height = 150, units = "mm")
-ggsave("simulation_results_analysis/vkt.bmp", device = "bmp", scale = 0.75, width = 150, height = 150, units = "mm")
+#ggsave("simulation_results_analysis/vkt.pdf", device = "pdf", scale = 0.75, width = 150, height = 150, units = "mm")
+#ggsave("simulation_results_analysis/vkt.bmp", device = "bmp", scale = 0.75, width = 150, height = 150, units = "mm")
 
 # ggplot(summary %>% filter(share_of_ev == 0), aes(y=distance/1000, x=scenario, color = vehicle, group = vehicle)) +
 #   scale_color_manual(values = colors_4_vehicles) + 
@@ -209,13 +200,13 @@ ggplot(summary_aux2 %>% filter(vehicle !="Feeder (shop)"), aes(y= co2_simple/100
   geom_bar(stat = "identity", position = "stack", color = "black") +
   ylab("CO2 emissions (kg)") + 
   xlab("Share of cargo bikes (%)") +
-  scale_y_continuous(expand = c(0, 0), limits = c(0,3500)) +
+  #scale_y_continuous(expand = c(0, 0), limits = c(0,3500)) +
   facet_wrap(.~share_of_ev) +
   theme_bw() + theme() 
 
 
-ggsave("simulation_results_analysis/co2.pdf", device = "pdf", scale = 0.75, width = 300, height = 150, units = "mm")
-ggsave("simulation_results_analysis/co2.bmp", device = "bmp", scale = 0.75, width = 300, height = 150, units = "mm")
+#ggsave("simulation_results_analysis/co2.pdf", device = "pdf", scale = 0.75, width = 300, height = 150, units = "mm")
+#ggsave("simulation_results_analysis/co2.bmp", device = "bmp", scale = 0.75, width = 300, height = 150, units = "mm")
 
 
 

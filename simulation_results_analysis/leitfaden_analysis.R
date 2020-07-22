@@ -34,42 +34,52 @@ scenario_table = data.frame(folders = scenario_folders, names = scenarios, dc = 
 vehicles$Fahrzeug = factor(vehicles$vehicle, levels = c("Feeder (parcel shop)", "Van", "Feeder (micro depot)", "Cargo bike", "Long-distance"),
                            labels = c("Zulieferer - Paketshop", "Transporter", "Zulieferer", "Lastenrad", "Fernverkehr"))
 
-for (city in c("muc", "reg")){
+for (this_city in c("muc", "reg")){
   
-  this_vehicles = vehicles %>% filter(city == city)
+  this_vehicles = vehicles %>% filter(city == this_city)
   
-  ggplot(this_vehicles %>% filter(vehicle != "Feeder (parcel shop)", vehicle != "Long-distance"), aes(y=n_tours, x=configuration, fill = Fahrzeug, group = vehicle)) +
-    scale_fill_manual(values = c("#6b719f", "#70928c", "#a5c594")) + 
+  this_vehicles = this_vehicles %>% filter(vehicle != "Feeder (parcel shop)", vehicle != "Long-distance")
+  
+  this_vehicles$Fahrzeug = factor(this_vehicles$Fahrzeug, levels = c("Lastenrad", "Zulieferer", "Transporter"))
+  
+  ggplot(this_vehicles, aes(y=n_tours, label = n_tours, x=configuration, fill = Fahrzeug, group = Fahrzeug)) +
+    scale_fill_manual(values = c("#00a3b0", "#7fa1b5", "#00446c")) + 
     geom_bar(stat = "identity", position = "stack", size = 2) +
-    ylab("Number of tours") +
+    ylab("Anzahl Touren") +
     xlab("Moduskonfiguration") +
     theme(text=element_text(size=14)) +
     theme_bw() + 
+    geom_text(position=position_stack(0.5), color = "white") + 
     theme(legend.position = "bottom", plot.margin=unit(c(0.5,0.5,0,0),"cm"))
   
   
-  ggsave(paste("simulation_results_analysis/leitfaden/tours_",city,".pdf",sep =""), device = "pdf", scale = 1, width = 150, height = 150, units = "mm")
-  ggsave(paste("simulation_results_analysis/leitfaden/tours_",city,".bmp",sep =""), device = "bmp", scale = 1, width = 150, height = 150, units = "mm")
+  ggsave(paste("simulation_results_analysis/leitfaden/tours_",this_city,".pdf",sep =""), device = "pdf", scale = 1, width = 150, height = 150, units = "mm")
+  ggsave(paste("simulation_results_analysis/leitfaden/tours_",this_city,".png",sep =""), device = "bmp", scale = 1, width = 150, height = 150, units = "mm")
   
-  ggplot(this_vehicles %>% filter(vehicle != "Feeder (parcel shop)", vehicle != "Long-distance"), aes(y=distance/1000, x=configuration, fill = Fahrzeug)) +
-    scale_fill_manual(values = c("#6b719f", "#70928c", "#a5c594")) + 
+  ggplot(this_vehicles , aes(y=distance/1000, label = round(distance/1000, digits = 0), x=configuration, fill = Fahrzeug)) +
+    scale_fill_manual(values = c("#00a3b0", "#7fa1b5", "#00446c")) + 
     geom_bar(stat = "identity", position =  "stack") +
-    ylab("Distanz")  +
+    ylab("Distanz (km)")  +
     xlab("Moduskonfiguration") +
     theme_bw() + 
+    geom_text(position=position_stack(0.5), color = "white") + 
     theme(legend.position = "bottom", plot.margin=unit(c(0.5,0.5,0,0),"cm"))
   
-  #ggsave("simulation_results_analysis/share.pdf", device = "pdf", scale = 0.75, width = 150, height = 150, units = "mm")
-  #ggsave("simulation_results_analysis/share.bmp", device = "bmp", scale = 0.75, width = 150, height = 150, units = "mm")
+  ggsave(paste("simulation_results_analysis/leitfaden/dist_",this_city,".pdf",sep =""), device = "pdf", scale = 1, width = 150, height = 150, units = "mm")
+  ggsave(paste("simulation_results_analysis/leitfaden/dist_",this_city,".png",sep =""), device = "bmp", scale = 1, width = 150, height = 150, units = "mm")
   
-  ggplot(this_vehicles %>% filter(vehicle != "Feeder (parcel shop)", vehicle != "Long-distance"), aes(y=total_time/3600, x=configuration, fill = Fahrzeug)) +
-    scale_fill_manual(values = c("#6b719f", "#70928c", "#a5c594")) + 
+  ggplot(this_vehicles , aes(y=total_time/3600, label = round(total_time/3600, digits = 0), x=configuration, fill = Fahrzeug)) +
+    scale_fill_manual(values = c("#00a3b0", "#7fa1b5", "#00446c")) + 
     geom_bar(stat = "identity", position =  "stack") +
-    ylab("Zeit")  +
+    ylab("Gesamtfahrzeit (h)")  +
     xlab("Moduskonfiguration") +
     theme_bw() + 
+    geom_text(position=position_stack(0.5), color = "white") + 
     theme(legend.position = "bottom", plot.margin=unit(c(0.5,0.5,0,0),"cm"))
   
+  
+  ggsave(paste("simulation_results_analysis/leitfaden/time_",this_city,".pdf",sep =""), device = "pdf", scale = 1, width = 150, height = 150, units = "mm")
+  ggsave(paste("simulation_results_analysis/leitfaden/time",this_city,".png",sep =""), device = "bmp", scale = 1, width = 150, height = 150, units = "mm")
   
   simplified_emission_factors = data.frame(vehicle = c("Feeder (parcel shop)", "Van", "Feeder (micro depot)", "Cargo bike"), 
                                            co2_factor_combustion = c(634,634,634,0), co2_factor_electric = c(259,259,259,15.54))
@@ -82,14 +92,16 @@ for (city in c("muc", "reg")){
     mutate(co2_simple = distance / 1000 * effective_share_of_ev * co2_factor_electric + distance / 1000 * (1 - effective_share_of_ev) * co2_factor_combustion)
   
   
-  ggplot(summary_aux2 %>% filter(vehicle !="Feeder (parcel shop)"), aes(y= co2_simple/1000, x=configuration, fill = vehicle, group = vehicle)) +
-    scale_fill_manual(values = c("#a5c594", "#70928c","#6b719f" )) + 
+  ggplot(summary_aux2, aes(y= co2_simple/1000, label = round(co2_simple/1000, digits = 0), x=configuration, fill = Fahrzeug, group = Fahrzeug)) +
+    scale_fill_manual(values = c("#00a3b0", "#7fa1b5", "#00446c")) + 
     geom_bar(stat = "identity", position = "stack") +
-    ylab("CO2 emissions (kg)") + 
+    ylab("CO2 Emissionen (kg)") + 
     xlab("Moduskonfiguration") +
+    geom_text(position=position_stack(0.5), color = "white") + 
     theme_bw() + theme() 
   
-  
+  ggsave(paste("simulation_results_analysis/leitfaden/co2_",this_city,".pdf",sep =""), device = "pdf", scale = 1, width = 150, height = 150, units = "mm")
+  ggsave(paste("simulation_results_analysis/leitfaden/co2_",this_city,".png",sep =""), device = "bmp", scale = 1, width = 150, height = 150, units = "mm")
   
 }
 
